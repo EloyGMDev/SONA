@@ -10,11 +10,6 @@
 
 ---
 
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/d8ugUESXwS)
-[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@eloygm)
-[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/eloygumo/)
-[![Website](https://img.shields.io/badge/eloygm.com-0d1117?style=for-the-badge&logo=google-chrome&logoColor=58a6ff)](https://eloygm.com)
-
 </div>
 
 ## 1. Archivo Principal y Flujo de Control
