@@ -10,7 +10,5 @@ void webServerInit();
 void handleWebAdmin();
 void handleDiscovery();
 void wifiWatchdog();
-void meshDiscoveryRun();
-void enviar401(WiFiClient& client);
 
 #endif

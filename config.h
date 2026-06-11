@@ -22,8 +22,8 @@ extern const char* ssid;
 extern const char* password;
 
 // ── LÍMITES ──────────────────────────────────
-#define MAX_AULAS   15
-#define MAX_HIST    10
+#define MAX_AULAS   20
+#define MAX_HIST    25
 
 // ── BITMASK DÍAS (Lunes=bit0 … Domingo=bit6) ─
 #define DAY_MON  0x01
@@ -37,16 +37,17 @@ extern const char* password;
 
 // ── STRUCT AULA ──────────────────────────────
 struct Aula {
-  char  uid[16];        // UID RFID
-  char  nombre[20];     // Nombre del aula / persona
-  uint8_t patronID;     // ID de earcon (1-10)
-  uint16_t accesos;     // Contador total de accesos
-  uint16_t maxAccesos;  // 0 = sin límite
+  char  uid[16];        // UID RFID (hex, max 7 bytes → 14 chars + \0)
+  char  nombre[32];     // Nombre del aula / persona
+  char  notes[48];      // Notas libres
+  int   patronID;       // ID de earcon (1-10)
+  int   accesos;        // Contador total de accesos
+  int   maxAccesos;     // 0 = sin límite
   uint8_t days;         // Bitmask de días permitidos (DAY_*)
-  int8_t  startHour;
-  int8_t  startMin;
-  int8_t  endHour;
-  int8_t  endMin;
+  int   startHour;
+  int   startMin;
+  int   endHour;
+  int   endMin;
   uint32_t expiryTs;    // UNIX timestamp de expiración (0 = sin caducidad)
   bool  enabled;        // Slot habilitado
 };
@@ -54,7 +55,7 @@ struct Aula {
 // ── STRUCT HISTORIAL ─────────────────────────
 struct HistEntry {
   char  uid[16];
-  char  nombre[20];
+  char  nombre[32];
   uint32_t timestamp;   // UNIX timestamp real (del RTC)
   uint8_t  result;      // 0=OK, 1=fuera horario, 2=desconocido, 3=lockdown, 4=max
 };
@@ -62,6 +63,7 @@ struct HistEntry {
 // ── STRUCT CONTRASEÑA ────────────────────────
 struct ConfigPwd {
   char adminHash[9];    // CRC32 hex de la contraseña
+  uint16_t signature;   // Control signature (0x5057)
 };
 
 // ── STRUCT CONFIGURACIÓN DEL SISTEMA ─────────
@@ -71,8 +73,10 @@ struct SystemConfig {
   int   quietStart;     // Hora inicio modo silencioso (e.g. 22)
   int   quietEnd;       // Hora fin modo silencioso (e.g. 8)
   bool  quietEnabled;   // Modo silencioso activo
-  char  hostname[24];   // hostname mDNS (siempre "sona")
-  char  deviceName[24]; // Label de aula (e.g. "Aula 202")
+  char  hostname[24];   // hostname mDNS (e.g. "sona")
+  char  wifiSSID[32];   // SSID wifi
+  char  wifiPassword[64]; // Password wifi
+  char  classRoom[32];  // Nombre descriptivo de la clase
   uint32_t crc;         // Checksum de integridad
 };
 
@@ -110,9 +114,8 @@ extern const unsigned long WIFI_CHECK_INTERVAL;
 extern unsigned long ntpLastSync;
 extern const unsigned long NTP_SYNC_INTERVAL;
 
-extern unsigned long meshLastCheck;
-extern const unsigned long MESH_DISCOVERY_INTERVAL;
-
 extern bool          registerMode;    // Modo registro rápido activo
+extern bool          isAPMode;        // Indica si el dispositivo está en modo Punto de Acceso (AP)
 
 #endif
+

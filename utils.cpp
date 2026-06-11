@@ -32,9 +32,7 @@ void addLog(const String& type, const String& msg, uint8_t level) {
   logHead = (logHead + 1) % MAX_LOG_LINES;
   if (logCount < MAX_LOG_LINES) logCount++;
 
-  if (Serial) {
-    Serial.println(entry);
-  }
+  Serial.println(entry);
 }
 
 String getLogJSON(uint8_t minLevel) {

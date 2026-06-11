@@ -5,8 +5,8 @@ IPAddress local_IP(192, 168, 67, 67);
 IPAddress gateway(192, 168, 67, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress dns(8, 8, 8, 8);
-const char* ssid     = "eikolea ";
-const char* password = "47404740";
+const char* ssid     = "kaskiskus";
+const char* password = "nomeacuerdo";
 
 // ── BASES DE DATOS ───────────────────────────
 Aula         baseDatos[MAX_AULAS];
@@ -41,6 +41,6 @@ const unsigned long NTP_SYNC_INTERVAL = 86400000UL; // 24h en ms
 // ── MODO REGISTRO ────────────────────────────
 bool registerMode = false;
 
-// ── MESH DISCOVERY ───────────────────────────
-unsigned long meshLastCheck = 0;
-const unsigned long MESH_DISCOVERY_INTERVAL = 60000; // 1 minuto
+// ── MODO PUNTO DE ACCESO (AP) ────────────────
+bool isAPMode = false;
+

@@ -45,7 +45,15 @@ bool ntpSync() {
 
 // Llamar desde loop(): re-sincroniza cada NTP_SYNC_INTERVAL ms
 void ntpPeriodicCheck() {
-  if (ntpLastSync == 0) return; // No sincronizado aún (lo hace el boot)
+  if (ntpLastSync == 0) {
+    // Si no se ha sincronizado todavia, intentarlo cada 60 segundos (60000 ms)
+    static unsigned long lastRetry = 0;
+    if (millis() - lastRetry >= 60000) {
+      lastRetry = millis();
+      ntpSync();
+    }
+    return;
+  }
   if (millis() - ntpLastSync >= NTP_SYNC_INTERVAL) {
     ntpSync();
   }

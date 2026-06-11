@@ -17,11 +17,11 @@ void hardwareInit() {
   if (!BLE.begin()) {
     addLog("ERROR", "BLE no inicializado");
   } else {
-    BLE.setLocalName(systemConfig.deviceName);
-    BLE.setDeviceName(systemConfig.deviceName);
-    BLE.setAdvertisedService(BLEService("FD00")); 
+    BLE.setLocalName(systemConfig.hostname);
+    BLE.setDeviceName(systemConfig.hostname);
+    BLE.setAdvertisedService(BLEService("180F")); // Nombramiento estándar o custom
     BLE.advertise();
-    addLog("SISTEMA", "BLE Sona Activo: " + String(systemConfig.deviceName));
+    addLog("SISTEMA", "BLE Beacon activo: " + String(systemConfig.hostname));
   }
 }
 
@@ -110,11 +110,23 @@ void earcon(int id) {
       tone(BUZZER_PIN,880,150);delay(160);
       tone(BUZZER_PIN,698,150);delay(160);
       tone(BUZZER_PIN,523,200);delay(250); break;
+    case 6:  // Futuristic Laser
+      for(int f=2000; f>800; f-=150){ tone(BUZZER_PIN,f,40); delay(45); } break;
+    case 7:  // Happy Chime
+      tone(BUZZER_PIN,1046,70); delay(80);
+      tone(BUZZER_PIN,1318,70); delay(80);
+      tone(BUZZER_PIN,1568,70); delay(80);
+      tone(BUZZER_PIN,2093,150); delay(180); break;
     case 8:  // Fanfare
       tone(BUZZER_PIN,783,100);delay(110);
       tone(BUZZER_PIN,783,100);delay(110);
       tone(BUZZER_PIN,783,100);delay(110);
       tone(BUZZER_PIN,1046,300);delay(350); break;
+    case 9:  // Cyber Pulsar
+      tone(BUZZER_PIN,900,90); delay(100);
+      tone(BUZZER_PIN,1300,90); delay(100);
+      tone(BUZZER_PIN,900,90); delay(100);
+      tone(BUZZER_PIN,1300,160); delay(180); break;
     case 10: // Special Access
       tone(BUZZER_PIN,600,100);delay(120);
       tone(BUZZER_PIN,800,100);delay(120);

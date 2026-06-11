@@ -54,7 +54,8 @@ void eepromResetAll() {
   // Limpiar aulas
   for (int i = 0; i < MAX_AULAS; i++) {
     strncpy(baseDatos[i].uid,    "00000000", 16);
-    strncpy(baseDatos[i].nombre, "SUELLO VACÍO", 20);
+    strncpy(baseDatos[i].nombre, "Sin Asignar", 32);
+    strncpy(baseDatos[i].notes,  "", 48);
     baseDatos[i].patronID   = 1;
     baseDatos[i].accesos    = 0;
     baseDatos[i].maxAccesos = 0;
@@ -73,6 +74,7 @@ void eepromResetAll() {
 
   // Resetear contraseña a "admin"
   crc32hex("admin").toCharArray(cfgPwd.adminHash, 9);
+  cfgPwd.signature = 0x5057;
   eepromSavePwd();
 
   // Config por defecto
@@ -82,10 +84,12 @@ void eepromResetAll() {
   systemConfig.quietEnd     = 8;
   systemConfig.quietEnabled = false;
   strncpy(systemConfig.hostname, "sona", 24);
-  strncpy(systemConfig.deviceName, "SONA - RFID", 24);
+  strncpy(systemConfig.wifiSSID, "", 32);
+  strncpy(systemConfig.wifiPassword, "", 64);
+  strncpy(systemConfig.classRoom, "Aula Sona", 32);
   eepromSaveConfig();
 
-  addLog("SISTEMA", "Reinicio total de memoria realizado", LOG_WARN);
+  addLog("SISTEMA", "EEPROM reset a valores por defecto", LOG_WARN);
 }
 
 // ══════════════════════════════════════════════
@@ -97,7 +101,7 @@ void pushHistorial(const String& uid, const String& nombre, uint8_t result) {
     historial[i] = historial[i - 1];
   }
   uid.toCharArray(historial[0].uid, 16);
-  nombre.toCharArray(historial[0].nombre, 20);
+  nombre.toCharArray(historial[0].nombre, 32);
   // Usar RTC para timestamp real
   RTCTime now;
   RTC.getTime(now);
@@ -121,12 +125,12 @@ void resetAccesos() {
   totalAccesos  = 0;
   accessesToday = 0;
   eepromSaveAulas();
-  addLog("ADMIN", "Todos los contadores han sido reseteados", LOG_WARN);
+  addLog("ADMIN", "Contadores reseteados", LOG_WARN);
 }
 
 void resetAccesosSlot(int i) {
   if (i < 0 || i >= MAX_AULAS) return;
   baseDatos[i].accesos = 0;
   eepromSaveAulas();
-  addLog("ADMIN", "Slot " + String(i) + " reseteado", LOG_INFO);
+  addLog("ADMIN", "Contador slot " + String(i) + " reseteado", LOG_INFO);
 }
