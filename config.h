@@ -22,8 +22,8 @@ extern const char* ssid;
 extern const char* password;
 
 // ── LÍMITES ──────────────────────────────────
-#define MAX_AULAS   20
-#define MAX_HIST    25
+#define MAX_AULAS   4
+#define MAX_HIST    4
 
 // ── BITMASK DÍAS (Lunes=bit0 … Domingo=bit6) ─
 #define DAY_MON  0x01
@@ -77,6 +77,9 @@ struct SystemConfig {
   char  wifiSSID[32];   // SSID wifi
   char  wifiPassword[64]; // Password wifi
   char  classRoom[32];  // Nombre descriptivo de la clase
+  char  classNum[8];    // Número de aula (ej. "202")
+  double latitude;      // Coordenada GPS latitud del dispositivo (0 = no configurado)
+  double longitude;     // Coordenada GPS longitud del dispositivo (0 = no configurado)
   uint32_t crc;         // Checksum de integridad
 };
 
@@ -103,6 +106,7 @@ extern bool          lockdownMode;
 extern String        ultimoTagUID;
 extern String        ultimoTagNombre;
 extern unsigned long ultimoTagTs;
+extern bool          ultimoTagPermitido;
 
 extern String        ultimoUID;
 extern unsigned long tiempoBloqueo;

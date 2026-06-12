@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <EEPROM.h>
 #include <RTC.h>
+#include <stddef.h>  // offsetof
 
 // ══════════════════════════════════════════════
 //  EEPROM CRUD BÁSICO
@@ -15,10 +16,13 @@ void eepromSavePwd()    { EEPROM.put(PWD_OFFSET,  cfgPwd);      }
 void eepromLoadPwd()    { EEPROM.get(PWD_OFFSET,  cfgPwd);      }
 
 void eepromSaveConfig() {
-  // Recalcular CRC antes de guardar
+  // Usar offsetof para iterar SOLO sobre los bytes ANTES del campo crc.
+  // sizeof(SystemConfig)-4 es INCORRECTO porque en ARM el struct tiene
+  // padding al final (double fuerza alineación a 8 bytes), y eso hace que
+  // el campo crc caiga DENTRO del rango iterado → el CRC siempre falla.
   uint32_t c = 0;
   const uint8_t* p = (const uint8_t*)&systemConfig;
-  for (size_t i = 0; i < sizeof(SystemConfig) - sizeof(uint32_t); i++) {
+  for (size_t i = 0; i < offsetof(SystemConfig, crc); i++) {
     c ^= p[i];
     for (int b = 0; b < 8; b++)
       c = (c & 1) ? (c >> 1) ^ 0xEDB88320 : (c >> 1);
@@ -39,7 +43,8 @@ bool eepromValidate() {
   EEPROM.get(CFG_OFFSET, tmp);
   uint32_t c = 0;
   const uint8_t* p = (const uint8_t*)&tmp;
-  for (size_t i = 0; i < sizeof(SystemConfig) - sizeof(uint32_t); i++) {
+  // Mismo fix: offsetof en lugar de sizeof-4
+  for (size_t i = 0; i < offsetof(SystemConfig, crc); i++) {
     c ^= p[i];
     for (int b = 0; b < 8; b++)
       c = (c & 1) ? (c >> 1) ^ 0xEDB88320 : (c >> 1);
@@ -58,7 +63,7 @@ void eepromResetAll() {
     strncpy(baseDatos[i].notes,  "", 48);
     baseDatos[i].patronID   = 1;
     baseDatos[i].accesos    = 0;
-    baseDatos[i].maxAccesos = 0;
+    baseDatos[i].maxAccesos = 35;
     baseDatos[i].days       = DAY_ALL;
     baseDatos[i].startHour  = 0;
     baseDatos[i].startMin   = 0;
@@ -86,7 +91,10 @@ void eepromResetAll() {
   strncpy(systemConfig.hostname, "sona", 24);
   strncpy(systemConfig.wifiSSID, "", 32);
   strncpy(systemConfig.wifiPassword, "", 64);
-  strncpy(systemConfig.classRoom, "Aula Sona", 32);
+  strncpy(systemConfig.classRoom, "Clase 1", 32);
+  strncpy(systemConfig.classNum, "", 8);
+  systemConfig.latitude     = 0.0;
+  systemConfig.longitude    = 0.0;
   eepromSaveConfig();
 
   addLog("SISTEMA", "EEPROM reset a valores por defecto", LOG_WARN);

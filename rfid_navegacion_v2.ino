@@ -58,7 +58,7 @@ void setup() {
       strncpy(baseDatos[i].notes,  "", 48);
       baseDatos[i].patronID   = 1;
       baseDatos[i].accesos    = 0;
-      baseDatos[i].maxAccesos = 0;
+      baseDatos[i].maxAccesos = 35;
       baseDatos[i].days       = DAY_ALL;
       baseDatos[i].startHour  = 0;
       baseDatos[i].startMin   = 0;
@@ -101,9 +101,13 @@ void setup() {
     strncpy(systemConfig.hostname, "sona", 24);
     strncpy(systemConfig.wifiSSID, "", 32);
     strncpy(systemConfig.wifiPassword, "", 64);
-    strncpy(systemConfig.classRoom, "Aula Sona", 32);
+    strncpy(systemConfig.classRoom, "Clase 1", 32);
+    strncpy(systemConfig.classNum, "", 8);
+    systemConfig.latitude  = 0.0;
+    systemConfig.longitude = 0.0;
+    systemConfig.crc = 0;
     eepromSaveConfig();
-    addLog("SISTEMA", "Configuracion por defecto guardada en EEPROM", LOG_WARN);
+    Serial.println("EEPROM: config invalida, defaults escritos");
     
     // Si la configuración del sistema era inválida (p. ej. primer arranque con nueva estructura),
     // también forzamos el restablecimiento de la contraseña a "admin"

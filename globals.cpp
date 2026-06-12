@@ -5,8 +5,8 @@ IPAddress local_IP(192, 168, 67, 67);
 IPAddress gateway(192, 168, 67, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress dns(8, 8, 8, 8);
-const char* ssid     = "kaskiskus";
-const char* password = "nomeacuerdo";
+const char* ssid     = "HEYC";
+const char* password = "Ce16Ya14Hu22El04290906";
 
 // ── BASES DE DATOS ───────────────────────────
 Aula         baseDatos[MAX_AULAS];
@@ -24,6 +24,7 @@ bool          lockdownMode   = false;
 String        ultimoTagUID    = "---";
 String        ultimoTagNombre = "---";
 unsigned long ultimoTagTs     = 0;
+bool          ultimoTagPermitido = false;
 
 // ── FILTRO ANTI-BOUNCE ───────────────────────
 String        ultimoUID       = "";

@@ -19,7 +19,11 @@ void hardwareInit() {
   } else {
     BLE.setLocalName(systemConfig.hostname);
     BLE.setDeviceName(systemConfig.hostname);
-    BLE.setAdvertisedService(BLEService("180F")); // Nombramiento estándar o custom
+    
+    // Configurar Manufacturer Data personalizado para evitar interferencias
+    uint8_t mfgData[] = { 0x0A, 0x0E, 0x53, 0x4F, 0x4E, 0x41 }; // ID 0x0E0A + "SONA"
+    BLE.setManufacturerData(mfgData, sizeof(mfgData));
+    
     BLE.advertise();
     addLog("SISTEMA", "BLE Beacon activo: " + String(systemConfig.hostname));
   }
@@ -43,21 +47,37 @@ void handleRFID() {
   addLog("RFID", "TAG: " + uid);
   ultimoTagUID = uid; 
   ultimoTagTs = millis()/1000;
+  ultimoTagPermitido = false;
   
   bool found = false;
   for (int i = 0; i < MAX_AULAS; i++) {
     if (uid == String(baseDatos[i].uid)) {
       String nom = String(baseDatos[i].nombre);
       
-      // VALIDACIÓN DE HORARIO
+      // VALIDACIÓN DE HORARIO Y DÍA
       bool inSchedule = true;
-      if (baseDatos[i].startHour != 0 || baseDatos[i].endHour != 0) {
-        RTCTime now;
-        RTC.getTime(now);
+      RTCTime now;
+      RTC.getTime(now);
+
+      uint8_t todayBit = 0;
+      switch (now.getDayOfWeek()) {
+        case DayOfWeek::MONDAY:    todayBit = DAY_MON; break;
+        case DayOfWeek::TUESDAY:   todayBit = DAY_TUE; break;
+        case DayOfWeek::WEDNESDAY: todayBit = DAY_WED; break;
+        case DayOfWeek::THURSDAY:  todayBit = DAY_THU; break;
+        case DayOfWeek::FRIDAY:    todayBit = DAY_FRI; break;
+        case DayOfWeek::SATURDAY:  todayBit = DAY_SAT; break;
+        case DayOfWeek::SUNDAY:    todayBit = DAY_SUN; break;
+      }
+
+      if (todayBit != 0 && !(baseDatos[i].days & todayBit)) {
+        inSchedule = false;
+      }
+
+      if (inSchedule && (baseDatos[i].startHour != 0 || baseDatos[i].endHour != 0)) {
         int cur = now.getHour() * 60 + now.getMinutes();
         int start = baseDatos[i].startHour * 60 + baseDatos[i].startMin;
         int end = baseDatos[i].endHour * 60 + baseDatos[i].endMin;
-        
         if (cur < start || cur > end) inSchedule = false;
       }
 
@@ -65,11 +85,14 @@ void handleRFID() {
         baseDatos[i].accesos++; 
         totalAccesos++;
         ultimoTagNombre = nom;
+        ultimoTagPermitido = true;
         eepromSaveAulas();
         pushHistorial(uid, nom);
         earcon(baseDatos[i].patronID);
         addLog("ACCESO", nom + " - Permitido");
       } else {
+        ultimoTagNombre = nom;
+        ultimoTagPermitido = false;
         addLog("DENIEGO", nom + " - Fuera de horario");
         earcon(0); // Sonido de error
       }
@@ -81,6 +104,7 @@ void handleRFID() {
 
   if (!found) {
     ultimoTagNombre = "DESCONOCIDO";
+    ultimoTagPermitido = false;
     earcon(0);
     addLog("WARN", "TAG no registrado: " + uid);
   }

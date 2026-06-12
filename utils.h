@@ -9,8 +9,9 @@
 #define LOG_WARN   2
 #define LOG_ERROR  3
 
+class WiFiClient;
 void   addLog(const String& type, const String& msg, uint8_t level = LOG_INFO);
-String getLogJSON(uint8_t minLevel = LOG_DEBUG);
+void   printLogJSON(WiFiClient& client, uint8_t minLevel = LOG_DEBUG);
 String uptimeFormatted();
 int    freeRam();
 

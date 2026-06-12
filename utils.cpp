@@ -35,23 +35,34 @@ void addLog(const String& type, const String& msg, uint8_t level) {
   Serial.println(entry);
 }
 
-String getLogJSON(uint8_t minLevel) {
-  String out = "[";
+void printLogJSON(WiFiClient& client, uint8_t minLevel) {
+  client.print("[");
   int total = min(logCount, MAX_LOG_LINES);
   int start = (logCount < MAX_LOG_LINES) ? 0 : logHead;
   bool first = true;
   for (int i = 0; i < total; i++) {
     int idx = (start + i) % MAX_LOG_LINES;
     if (logBuffer[idx].level < minLevel) continue;
-    String line = String(logBuffer[idx].text);
-    line.replace("\\", "\\\\");
-    line.replace("\"", "\\\"");
-    if (!first) out += ",";
-    out += "{\"l\":" + String(logBuffer[idx].level) + ",\"t\":\"" + line + "\"}";
+    
+    if (!first) client.print(",");
+    client.print("{\"l\":");
+    client.print(logBuffer[idx].level);
+    client.print(",\"t\":\"");
+    
+    const char* text = logBuffer[idx].text;
+    for (int j = 0; text[j] != '\0'; j++) {
+      char c = text[j];
+      if (c == '\\') client.print("\\\\");
+      else if (c == '"') client.print("\\\"");
+      else if (c == '\n') client.print("\\n");
+      else if (c == '\r') client.print("\\r");
+      else if (c == '\t') client.print("\\t");
+      else if ((unsigned char)c >= 32) client.print(c);
+    }
+    client.print("\"}");
     first = false;
   }
-  out += "]";
-  return out;
+  client.print("]");
 }
 
 // ── UPTIME ───────────────────────────────────

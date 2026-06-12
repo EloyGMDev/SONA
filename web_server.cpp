@@ -168,6 +168,7 @@ void procesarUpdate(String data) {
   int sm = getParam(data,"sm").toInt();
   int eh = getParam(data,"eh").toInt();
   int em = getParam(data,"em").toInt();
+  int days = hasParam(data,"days") ? getParam(data,"days").toInt() : DAY_ALL;
   if (idx >= 0 && idx < MAX_AULAS) {
     uid.toUpperCase(); 
     uid.toCharArray(baseDatos[idx].uid, 15);
@@ -177,6 +178,7 @@ void procesarUpdate(String data) {
     baseDatos[idx].startMin  = sm;
     baseDatos[idx].endHour   = eh;
     baseDatos[idx].endMin    = em;
+    baseDatos[idx].days      = days;
     baseDatos[idx].enabled   = (uid.length() > 0);
     eepromSaveAulas();
     addLog("ADMIN","Slot "+String(idx)+" actualizado");
@@ -278,6 +280,7 @@ select option{background:#111;color:#fff;}
 <div class='stat-item'><span data-translate='uptime'>UPTIME</span>: <b id='sup'>--s</b></div>
 <div class='stat-item'><span data-translate='signal'>SIGNAL</span>: <b id='srs'>--dBm</b></div>
 </div></div>
+<div id='connErrorBanner' style='display:none; background:#ff4b2b; color:#fff; text-align:center; padding:12px; font-size:12px; font-weight:600; position:sticky; top:60px; z-index:99; box-shadow:0 4px 10px rgba(0,0,0,0.3);'></div>
 
 <!-- Auth Overlay -->
 <div id='ao' style='position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:var(--transition);'>
@@ -298,6 +301,7 @@ select option{background:#111;color:#fff;}
 <div><div class='card glass'><div class='card-title' data-translate='active_editor'>Active Editor</div><div style='display:grid;gap:15px;'>
 <div><label style='font-size:10px;color:var(--dim)' data-translate='slot_uid_name'>SLOT / UID / NAME</label><div style='display:flex;gap:5px;'><input id='fi' type='number' placeholder='Slot' style='width:70px'><input id='fu' placeholder='UID'><input id='fn' placeholder='Name' data-translate='name'></div></div>
 <div><label style='font-size:10px;color:var(--dim)' data-translate='permitted_schedule'>PERMITTED SCHEDULE (START - END)</label><div style='display:flex;gap:5px;align-items:center;'><input id='fsh' type='number' placeholder='HH'><input id='fsm' type='number' placeholder='MM'><span>:</span><input id='feh' type='number' placeholder='HH'><input id='fem' type='number' placeholder='MM'></div></div>
+<div><label style='font-size:10px;color:var(--dim)' data-translate='permitted_days'>DÍAS PERMITIDOS</label><div style='display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;'><label style='font-size:12px;'><input type='checkbox' id='d1' checked> L</label><label style='font-size:12px;'><input type='checkbox' id='d2' checked> M</label><label style='font-size:12px;'><input type='checkbox' id='d3' checked> X</label><label style='font-size:12px;'><input type='checkbox' id='d4' checked> J</label><label style='font-size:12px;'><input type='checkbox' id='d5' checked> V</label><label style='font-size:12px;'><input type='checkbox' id='d6' checked> S</label><label style='font-size:12px;'><input type='checkbox' id='d7' checked> D</label></div></div>
 <div><label style='font-size:10px;color:var(--dim)' data-translate='sound_pattern'>SOUND PATTERN</label><select id='fp'><option value='1'>Standard Success</option><option value='2'>Double Beep</option><option value='3'>Triple Fast</option><option value='4'>Ascending Melody</option><option value='5'>Descending Soft</option><option value='6'>Futuristic Laser</option><option value='7'>Happy Chime</option><option value='8'>Fanfare Victory</option><option value='9'>Cyber Pulsar</option><option value='10'>Special VIP</option></select></div>
 <button class='btn-acc' style='margin-top:10px' onclick='save()' data-translate='commit_changes'>COMMIT CHANGES</button></div></div>
 
@@ -306,7 +310,10 @@ select option{background:#111;color:#fff;}
 <div><label style='font-size:10px;color:var(--dim)' data-translate='wifi_ssid'>WIFI NETWORK (SSID)</label><input id='sysSsid' placeholder='SSID'></div>
 <div><label style='font-size:10px;color:var(--dim)' data-translate='wifi_pass'>WIFI PASSWORD</label><input id='sysPass' type='password' placeholder='Password' data-translate='wifi_pass'></div>
 <div><label style='font-size:10px;color:var(--dim)' data-translate='hostname'>SYSTEM HOSTNAME</label><input id='sysHost' placeholder='sona'></div>
-<div><label style='font-size:10px;color:var(--dim)' data-translate='classroom_name'>Nombre del Aula / Clase</label><input id='sysClass' placeholder='Aula Sona'></div>
+<div><label style='font-size:10px;color:var(--dim)' data-translate='classroom_name'>Nombre del Aula / Clase</label><input id='sysClass' placeholder='Clase 1'></div>
+<div><label style='font-size:10px;color:var(--dim)' data-translate='classroom_number'>Número de Aula</label><input id='sysClassNum' placeholder='Ej: 202'></div>
+<div><label style='font-size:10px;color:var(--dim)'>LATITUD GPS</label><input id='sysLat' type='number' step='any' placeholder='0.0'></div>
+<div><label style='font-size:10px;color:var(--dim)'>LONGITUD GPS</label><input id='sysLon' type='number' step='any' placeholder='0.0'></div>
 <div><label style='font-size:10px;color:var(--dim)' data-translate='ntp_server'>NTP SERVER</label><input id='sysNtp' placeholder='pool.ntp.org'></div>
 <div><label style='font-size:10px;color:var(--dim)' data-translate='utc_offset'>TIMEZONE (UTC OFFSET)</label><input id='sysOffset' type='number' placeholder='2'></div>
 <div style='display:flex;align-items:center;justify-content:space-between;'>
@@ -318,7 +325,11 @@ select option{background:#111;color:#fff;}
 <button class='btn-acc' style='margin-top:10px' onclick='saveSysConfig()' data-translate='save_system_config'>SAVE CONFIGURATION</button></div></div>
 
 <div class='card glass'><div class='card-title' data-translate='security_settings'>Security Settings</div><div style='display:grid;gap:12px;'>
-<label style='font-size:10px;color:var(--dim)' data-translate='new_admin_password'>NEW ADMIN PASSWORD</label><div style='display:flex;gap:10px;'><input id='np' type='password' placeholder='Password' data-translate='new_admin_password'><button class='btn-err' onclick='chpwd()' data-translate='update'>UPDATE</button></div></div></div>
+<label style='font-size:10px;color:var(--dim)' data-translate='new_admin_password'>NEW ADMIN PASSWORD</label><div style='display:flex;gap:10px;'><input id='np' type='password' placeholder='Password' data-translate='new_admin_password'><button class='btn-err' onclick='chpwd()' data-translate='update'>UPDATE</button></div>
+<hr style='border:none;border-top:1px solid rgba(255,255,255,0.07);margin:4px 0;'>
+<p style='font-size:11px;color:var(--dim)' data-translate='eeprom_reset_desc'>Borra todos los datos y configuración almacenados. Útil si el dispositivo no guarda la configuración correctamente.</p>
+<button class='btn-err' style='width:100%' onclick='resetEeprom()' data-translate='eeprom_reset'>RESET EEPROM</button>
+</div></div>
 
 <div class='card glass'><div class='card-title' data-translate='system_firmware'>System Firmware</div><div style='display:grid;gap:12px;'>
 <p style='font-size:11px;color:var(--dim)'><span data-translate='current_version'>Current Version:</span> )html" VERSION R"html(</p>
@@ -351,6 +362,7 @@ const i18n = {
     active_editor: 'Editor Activo',
     slot_uid_name: 'SLOT / UID / NOMBRE',
     permitted_schedule: 'HORARIO PERMITIDO (INICIO - FIN)',
+    permitted_days: 'DÍAS PERMITIDOS',
     sound_pattern: 'PATRÓN DE SONIDO',
     commit_changes: 'GUARDAR CAMBIOS',
     security_settings: 'Configuración de Seguridad',
@@ -364,6 +376,7 @@ const i18n = {
     wifi_pass: 'CONTRASEÑA WIFI',
     hostname: 'HOSTNAME DEL SISTEMA',
     classroom_name: 'Nombre del Aula / Clase',
+    classroom_number: 'Número de Aula',
     ntp_server: 'SERVIDOR NTP',
     utc_offset: 'ZONA HORARIA (OFFSET UTC)',
     quiet_mode: 'MODO SILENCIOSO',
@@ -376,6 +389,9 @@ const i18n = {
     import: 'Importar',
     export: 'Exportar',
     scanning: 'Escaneando red...',
+    eeprom_reset: 'RESET EEPROM',
+    eeprom_reset_desc: 'Borra todos los datos y configuración almacenados. Útil si el dispositivo no guarda la configuración.',
+    eeprom_reset_confirm: '⚠️ Esto borrará TODA la base de datos, historial y configuración del dispositivo. ¿Continuar?',
     deploy_all: 'DESPLEGAR EN TODOS LOS DISPOSITIVOS'
   },
   ca: {
@@ -397,6 +413,7 @@ const i18n = {
     active_editor: 'Editor Actiu',
     slot_uid_name: 'SLOT / UID / NOM',
     permitted_schedule: 'HORARI PERMÈS (INICI - FI)',
+    permitted_days: 'DIES PERMESOS',
     sound_pattern: 'PATRÓ DE SO',
     commit_changes: 'DESAR CANVIS',
     security_settings: 'Configuració de Seguretat',
@@ -410,6 +427,7 @@ const i18n = {
     wifi_pass: 'CONTRASENYA WIFI',
     hostname: 'HOSTNAME DEL SISTEMA',
     classroom_name: 'Nom de l\'Aula / Classe',
+    classroom_number: 'Número d\'Aula',
     ntp_server: 'SERVIDOR NTP',
     utc_offset: 'ZONA HORÀRIA (DIFERÈNCIA UTC)',
     quiet_mode: 'MODE SILENCIÓS',
@@ -422,6 +440,9 @@ const i18n = {
     import: 'Importar',
     export: 'Exportar',
     scanning: 'Escanejant xarxa...',
+    eeprom_reset: 'RESET EEPROM',
+    eeprom_reset_desc: 'Esborra totes les dades i configuració emmagatzemades. Útil si el dispositiu no desa la configuració.',
+    eeprom_reset_confirm: '⚠️ Això esborrarà TOTA la base de dades, historial i configuració del dispositiu. Continuar?',
     deploy_all: 'DESPLEGAR EN TOTS ELS DISPOSITIUS'
   }
 };
@@ -448,7 +469,11 @@ setLanguage(L);
 function crc32(s){var t=[];for(var i=0;i<256;i++){var c=i;for(var j=0;j<8;j++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[i]=c;}var r=0xFFFFFFFF;for(var i=0;i<s.length;i++)r=t[(r^s.charCodeAt(i))&0xFF]^(r>>>8);return(~r>>>0).toString(16).toUpperCase().padStart(8,'0');}
 var H=localStorage.getItem('esp_h')||'';if(H)checkAuth();
    function login(){H=crc32(document.getElementById('pi').value);checkAuth();}
-   function checkAuth(){fetch('/api/log',{headers:{'X-Auth':H}}).then(r=>{if(r.ok){localStorage.setItem('esp_h',H);document.getElementById('ao').style.transform='translateY(-100%)';setTimeout(()=>{document.getElementById('ao').style.display='none';document.getElementById('app').style.display='grid';setTimeout(()=>document.getElementById('app').style.opacity='1',50);},400);start();}else{document.getElementById('ae').innerText= (L==='ca' ? i18n.ca.auth_failed : i18n.es.auth_failed);localStorage.removeItem('esp_h');}}).catch(e=>console.error(e));}
+   var errMsgs = {
+     es: "⚠️ ERROR DE CONEXIÓN: Si estás usando 'sona.local', intenta acceder con la IP del Arduino (ej: http://192.168.X.X) en la barra de direcciones.",
+     ca: "⚠️ ERROR DE CONNEXIÓ: Si estàs fent servir 'sona.local', intenta accedir amb la IP directa de l'Arduino (ex: http://192.168.X.X) per evitar errors de DNS."
+   };
+   function checkAuth(){fetch('/api/log',{headers:{'X-Auth':H}}).then(r=>{if(r.ok){var b=document.getElementById('connErrorBanner');if(b)b.style.display='none';localStorage.setItem('esp_h',H);document.getElementById('ao').style.transform='translateY(-100%)';setTimeout(()=>{document.getElementById('ao').style.display='none';document.getElementById('app').style.display='grid';setTimeout(()=>document.getElementById('app').style.opacity='1',50);},400);start();}else{document.getElementById('ae').innerText= (L==='ca' ? i18n.ca.auth_failed : i18n.es.auth_failed);localStorage.removeItem('esp_h');}}).catch(e=>{console.error(e);var b=document.getElementById('connErrorBanner');if(b){b.innerText=errMsgs[L]||errMsgs.es;b.style.display='block';}});}
    function api(p,o={}){
      o.headers=Object.assign({'X-Auth':H},o.headers||{});
      return fetch(p,o).then(r=>{
@@ -461,15 +486,31 @@ var H=localStorage.getItem('esp_h')||'';if(H)checkAuth();
          setTimeout(()=>document.getElementById('app').style.display='none',400);
          throw new Error('Unauthorized');
        }
+       var b=document.getElementById('connErrorBanner');if(b)b.style.display='none';
        return r;
+     }).catch(err=>{
+       if(err.message!=='Unauthorized'){
+         var b=document.getElementById('connErrorBanner');
+         if(b){b.innerText=errMsgs[L]||errMsgs.es;b.style.display='block';}
+       }
+       throw err;
      });
    }
-   function start(){loadLog();loadAulas();discoverDevices();setInterval(loadLog,3000);}
+   async function start(){
+     try {
+       await loadLog();
+       await loadAulas();
+       await discoverDevices();
+     } catch(e) {
+       console.error(e);
+     }
+     setInterval(loadLog, 4000);
+   }
 
 var sysConfigLoaded = false;
 function loadLog(){
-  if(document.getElementById('lm').checked)return;
-  api('/api/log').then(r=>r.json()).then(d=>{
+  if(document.getElementById('lm').checked)return Promise.resolve();
+  return api('/api/log').then(r=>r.json()).then(d=>{
     document.getElementById('sup').innerText=d.uptime+'s';
     document.getElementById('srs').innerText=d.rssi+'dBm';
     document.getElementById('navLogo').innerText = (d.sysClass && d.sysClass.trim() !== '') ? d.sysClass.toUpperCase() : 'SONA SYSTEM';
@@ -479,11 +520,14 @@ function loadLog(){
       document.getElementById('sysPass').value = d.sysPass || '';
       document.getElementById('sysHost').value = d.sysHost || '';
       document.getElementById('sysClass').value = d.sysClass || '';
+      document.getElementById('sysClassNum').value = d.sysClassNum || '';
       document.getElementById('sysNtp').value = d.sysNtp || '';
       document.getElementById('sysOffset').value = d.sysOffset !== undefined ? d.sysOffset : 2;
       document.getElementById('sysQuietEn').checked = d.sysQuietEn || false;
       document.getElementById('sysQStart').value = d.sysQStart !== undefined ? d.sysQStart : 22;
       document.getElementById('sysQEnd').value = d.sysQEnd !== undefined ? d.sysQEnd : 8;
+      document.getElementById('sysLat').value = d.lat !== undefined ? d.lat : 0.0;
+      document.getElementById('sysLon').value = d.lon !== undefined ? d.lon : 0.0;
       sysConfigLoaded = true;
     }
     
@@ -501,7 +545,7 @@ function loadLog(){
 }
 var aulasArray = [];
 function loadAulas(){
-  api('/api/aulas').then(r=>r.json()).then(a=>{
+  return api('/api/aulas').then(r=>r.json()).then(a=>{
     aulasArray = a;
     var h='';
     a.forEach(x=>{
@@ -509,7 +553,18 @@ function loadAulas(){
       var sm = x.sm !== undefined ? x.sm : 0;
       var eh = x.eh !== undefined ? x.eh : 0;
       var em = x.em !== undefined ? x.em : 0;
-      h+=`<tr><td>${x.idx}</td><td>${x.uid}</td><td style='font-weight:600'>${x.nombre}</td><td>P${x.pat}</td><td>${sh}:${sm.toString().padStart(2,'0')}-${eh}:${em.toString().padStart(2,'0')}</td><td>${x.accesos}</td><td style='text-align:right'><button class='btn-acc' style='padding:5px 10px;font-size:10px' onclick='es(${x.idx})' data-translate='edit'>EDIT</button></td></tr>`;
+      var dVal = x.days !== undefined ? x.days : 127;
+      var dayLabels = ["L","M","X","J","V","S","D"];
+      var daysStr = "";
+      for (var d=0; d<7; d++) {
+        if (dVal & (1<<d)) {
+          daysStr += "<b style='color:#00d2ff'>" + dayLabels[d] + "</b>";
+        } else {
+          daysStr += "<span style='color:#333'>" + dayLabels[d] + "</span>";
+        }
+        daysStr += " ";
+      }
+      h+=`<tr><td>${x.idx}</td><td>${x.uid}</td><td style='font-weight:600'>${x.nombre}</td><td>P${x.pat}</td><td>${sh}:${sm.toString().padStart(2,'0')}-${eh}:${em.toString().padStart(2,'0')}<br><span style='font-size:10px;'>${daysStr}</span></td><td>${x.accesos}</td><td style='text-align:right'><button class='btn-acc' style='padding:5px 10px;font-size:10px' onclick='es(${x.idx})' data-translate='edit'>EDIT</button></td></tr>`;
     });
     document.getElementById('ab').innerHTML=h;
     setLanguage(L); // Re-traducir tras renderizar la tabla
@@ -526,16 +581,44 @@ function es(idx){
   document.getElementById('fsm').value=x.sm !== undefined ? x.sm : 0;
   document.getElementById('feh').value=x.eh !== undefined ? x.eh : 0;
   document.getElementById('fem').value=x.em !== undefined ? x.em : 0;
+  var dVal = x.days !== undefined ? x.days : 127;
+  for (var d=1; d<=7; d++) {
+    document.getElementById('d'+d).checked = !!(dVal & (1<<(d-1)));
+  }
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function save(){var b=`idx=${document.getElementById('fi').value}&uid=${document.getElementById('fu').value}&nom=${encodeURIComponent(document.getElementById('fn').value)}&pat=${document.getElementById('fp').value}&sh=${document.getElementById('fsh').value}&sm=${document.getElementById('fsm').value}&eh=${document.getElementById('feh').value}&em=${document.getElementById('fem').value}`;api('/api/update',{method:'POST',body:b}).then(r=>{if(r.ok)loadAulas();});}
+function save(){
+  var dVal = 0;
+  for (var d=1; d<=7; d++) {
+    if (document.getElementById('d'+d).checked) {
+      dVal |= (1<<(d-1));
+    }
+  }
+  var b=`idx=${document.getElementById('fi').value}&uid=${document.getElementById('fu').value}&nom=${encodeURIComponent(document.getElementById('fn').value)}&pat=${document.getElementById('fp').value}&sh=${document.getElementById('fsh').value}&sm=${document.getElementById('fsm').value}&eh=${document.getElementById('feh').value}&em=${document.getElementById('fem').value}&days=${dVal}`;
+  api('/api/update',{method:'POST',body:b}).then(r=>{if(r.ok)loadAulas();});
+}
 function chpwd(){
   const msg = L==='ca' ? '¿Canviar contrasenya mestra?' : '¿Cambiar contraseña maestra?';
   if(!confirm(msg))return;
   api('/api/pwd',{method:'POST',body:'pwd='+encodeURIComponent(document.getElementById('np').value)}).then(r=>{if(r.ok)location.reload();});
 }
+function resetEeprom(){
+  const msg = L==='ca' ? i18n.ca.eeprom_reset_confirm : i18n.es.eeprom_reset_confirm;
+  if(!confirm(msg)) return;
+  api('/api/eepromreset',{method:'POST',body:''}).then(r=>{
+    if(r.ok){
+      const okMsg = L==='ca' ? 'EEPROM esborrada. El dispositiu es reinicia...' : 'EEPROM borrada. El dispositivo se está reiniciando...';
+      alert(okMsg);
+      setTimeout(()=>location.reload(), 6000);
+    }
+  }).catch(()=>{
+    const okMsg = L==='ca' ? 'EEPROM esborrada. El dispositiu es reinicia...' : 'EEPROM borrada. El dispositivo se está reiniciando...';
+    alert(okMsg);
+    setTimeout(()=>location.reload(), 6000);
+  });
+}
 function saveSysConfig(){
-  var b=`ssid=${encodeURIComponent(document.getElementById('sysSsid').value)}&pass=${encodeURIComponent(document.getElementById('sysPass').value)}&host=${encodeURIComponent(document.getElementById('sysHost').value)}&class=${encodeURIComponent(document.getElementById('sysClass').value)}&ntp=${encodeURIComponent(document.getElementById('sysNtp').value)}&offset=${document.getElementById('sysOffset').value}&quietEn=${document.getElementById('sysQuietEn').checked}&qStart=${document.getElementById('sysQStart').value}&qEnd=${document.getElementById('sysQEnd').value}`;
+  var b=`ssid=${encodeURIComponent(document.getElementById('sysSsid').value)}&pass=${encodeURIComponent(document.getElementById('sysPass').value)}&host=${encodeURIComponent(document.getElementById('sysHost').value)}&class=${encodeURIComponent(document.getElementById('sysClass').value)}&classNum=${encodeURIComponent(document.getElementById('sysClassNum').value)}&ntp=${encodeURIComponent(document.getElementById('sysNtp').value)}&offset=${document.getElementById('sysOffset').value}&quietEn=${document.getElementById('sysQuietEn').checked}&qStart=${document.getElementById('sysQStart').value}&qEnd=${document.getElementById('sysQEnd').value}&lat=${document.getElementById('sysLat').value}&lon=${document.getElementById('sysLon').value}`;
   const msg = L==='ca' ? '¿Desar configuració i reiniciar dispositiu?' : '¿Guardar configuración y reiniciar dispositivo?';
   if(!confirm(msg)) return;
   api('/api/sysconfig',{method:'POST',body:b}).then(r=>{
@@ -549,7 +632,7 @@ function saveSysConfig(){
 function discoverDevices(){
   const container = document.getElementById('sonaNetList');
   container.innerHTML = `<div style="text-align:center;color:var(--dim);font-size:12px;padding:20px;">${L==='ca' ? i18n.ca.scanning : i18n.es.scanning}</div>`;
-  api('/api/discover').then(r => r.json()).then(devices => {
+  return api('/api/discover').then(r => r.json()).then(devices => {
     if (devices.length === 0) {
       container.innerHTML = `<div style="text-align:center;color:var(--dim);font-size:12px;padding:20px;">${L==='ca' ? 'No s\'han trobat altres dispositius SONA' : 'No se encontraron otros dispositivos SONA'}</div>`;
       return;
@@ -812,6 +895,18 @@ function uo(){
 </script></body></html>)html");
 }
 
+static void printEscapedJSON(WiFiClient& client, const char* src) {
+  for (int i = 0; src[i] != '\0'; i++) {
+    char c = src[i];
+    if (c == '\\') client.print("\\\\");
+    else if (c == '"') client.print("\\\"");
+    else if (c == '\n') client.print("\\n");
+    else if (c == '\r') client.print("\\r");
+    else if (c == '\t') client.print("\\t");
+    else if ((unsigned char)c >= 32) client.print(c);
+  }
+}
+
 void webServerInit() {
   const char* apName = "SONA_SETUP";
   const char* apPass = "sonasetup";
@@ -886,24 +981,16 @@ void handleWebAdmin() {
   while (client.connected() && (millis()-t0 < 2000)) {
     if (client.available()) {
       char c = client.read(); 
-      allHeaders += c;
+      if (allHeaders.length() < 1000) {
+        allHeaders += c;
+      } else {
+        client.stop();
+        return;
+      }
       if (allHeaders.endsWith("\r\n\r\n")) break;
     }
   }
-  // ... resto de la lógica ...
 
-  
-  if (allHeaders.indexOf("POST") != -1) {
-    String clStr = getHeaderValue(allHeaders, "Content-Length");
-    if (clStr.length() > 0) {
-      int cl = clStr.toInt();
-      for (int i = 0; i < cl && client.connected(); i++) {
-        while (!client.available() && millis()-t0 < 3000);
-        if (client.available()) body += (char)client.read();
-      }
-    }
-  }
-  
   int lineEnd = allHeaders.indexOf("\r\n");
   String reqLine = allHeaders.substring(0, (lineEnd == -1) ? allHeaders.length() : lineEnd);
 
@@ -916,6 +1003,24 @@ void handleWebAdmin() {
                "Connection: keep-alive\r\n\r\n");
     client.stop();
     return;
+  }
+
+  // Solo leer el cuerpo si es un POST y NO es OTA ni Restore (que se leen mediante streaming directo en sus handlers)
+  if (reqLine.indexOf("POST") != -1 && 
+      reqLine.indexOf("/api/ota") == -1 && 
+      reqLine.indexOf("/api/restore") == -1) {
+    String clStr = getHeaderValue(allHeaders, "Content-Length");
+    if (clStr.length() > 0) {
+      int cl = clStr.toInt();
+      if (cl > 2048) cl = 2048; // Limitar tamaño de lectura del cuerpo para evitar fragmentar/agotar SRAM
+      for (int i = 0; i < cl && client.connected(); i++) {
+        unsigned long readStart = millis();
+        while (!client.available() && millis() - readStart < 3000) {
+          delay(1);
+        }
+        if (client.available()) body += (char)client.read();
+      }
+    }
   }
 
   bool auth = false;
@@ -932,65 +1037,81 @@ void handleWebAdmin() {
     }
   } 
   else if (reqLine.indexOf("/api/") != -1) {
-    if (!auth && !(isAPMode && reqLine.indexOf("POST /api/sysconfig") != -1)) { 
+    if (!auth && !(isAPMode && reqLine.indexOf("POST /api/sysconfig") != -1) && reqLine.indexOf("/api/buzzer") == -1) { 
       enviar401(client); 
     } else {
-      if (reqLine.indexOf("GET /api/discover") != -1) {
+      if (reqLine.indexOf("/api/buzzer") != -1) {
+        sp(client, "HTTP/1.1 200 OK\r\n"
+                   "Content-Type: text/plain\r\n"
+                   "Content-Length: 2\r\n"
+                   "Access-Control-Allow-Origin: *\r\n\r\n"
+                   "OK");
+        client.stop(); // Cerrar el socket inmediatamente para liberar al cliente HTTP
+        for (int i = 0; i < 4; i++) {
+          tone(BUZZER_PIN, 1000, 200);
+          delay(300);
+          tone(BUZZER_PIN, 1300, 200);
+          delay(300);
+        }
+      }
+      else if (reqLine.indexOf("GET /api/discover") != -1) {
         udp.beginPacket(IPAddress(255, 255, 255, 255), udpPort);
         udp.print("SONA_DISCOVER");
         udp.endPacket();
         
-        String list = "[";
+        sp(client, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\r\n[");
+        
         bool first = true;
         unsigned long startScan = millis();
-        while (millis() - startScan < 800) {
+        while (millis() - startScan < 200) {
           int cb = udp.parsePacket();
           if (cb) {
             int len = udp.read(packetBuffer, 255);
             if (len > 0) {
               packetBuffer[len] = 0;
               if (packetBuffer[0] == '{') {
-                if (!first) list += ",";
-                list += String(packetBuffer);
+                if (!first) client.print(",");
+                client.print(packetBuffer);
                 first = false;
               }
             }
           }
           delay(10);
         }
-        list += "]";
-        
-        sp(client, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\r\n");
-        client.print(list);
+        client.print("]");
       }
       else if (reqLine.indexOf("GET /api/log") != -1) {
         sp(client, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\r\n");
         client.print("{\"log\":");
-        client.print(getLogJSON());
+        printLogJSON(client);
         client.print(",\"uptime\":"); client.print(millis()/1000);
         client.print(",\"rssi\":"); client.print(WiFi.RSSI());
         client.print(",\"heap\":"); client.print(getFreeHeap());
         client.print(",\"accesos\":"); client.print(totalAccesos);
         client.print(",\"lastUID\":\""); client.print(ultimoTagUID);
-        client.print("\",\"lastNombre\":\""); client.print(escapeJSON(ultimoTagNombre));
+        client.print("\",\"lastNombre\":\""); printEscapedJSON(client, ultimoTagNombre.c_str());
         client.print("\",\"lastTs\":"); client.print(ultimoTagTs);
-        client.print(",\"sysSsid\":\""); client.print(escapeJSON(systemConfig.wifiSSID));
-        client.print("\",\"sysPass\":\""); client.print(escapeJSON(systemConfig.wifiPassword));
-        client.print("\",\"sysHost\":\""); client.print(escapeJSON(systemConfig.hostname));
-        client.print("\",\"sysNtp\":\""); client.print(escapeJSON(systemConfig.ntpServer));
+        client.print(",\"lastPermitido\":"); client.print(ultimoTagPermitido ? "true" : "false");
+        client.print(",\"sysSsid\":\""); printEscapedJSON(client, systemConfig.wifiSSID);
+        client.print("\",\"sysPass\":\""); printEscapedJSON(client, systemConfig.wifiPassword);
+        client.print("\",\"sysHost\":\""); printEscapedJSON(client, systemConfig.hostname);
+        client.print("\",\"sysNtp\":\""); printEscapedJSON(client, systemConfig.ntpServer);
         client.print("\",\"sysOffset\":"); client.print(systemConfig.utcOffset);
         client.print(",\"sysQuietEn\":"); client.print(systemConfig.quietEnabled ? "true" : "false");
         client.print(",\"sysQStart\":"); client.print(systemConfig.quietStart);
         client.print(",\"sysQEnd\":"); client.print(systemConfig.quietEnd);
-        client.print(",\"sysClass\":\""); client.print(escapeJSON(systemConfig.classRoom));
-        client.print("\"}");
+        client.print(",\"sysClass\":\""); printEscapedJSON(client, systemConfig.classRoom);
+        client.print("\",\"sysClassNum\":\""); printEscapedJSON(client, systemConfig.classNum);
+        client.print("\",\"lat\":"); client.print(systemConfig.latitude, 8);
+        client.print(",\"lon\":"); client.print(systemConfig.longitude, 8);
+        client.print("}");
       } 
       else if (reqLine.indexOf("GET /api/hist") != -1) {
         sp(client, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\r\n[");
         for (int i = 0; i < MAX_HIST; i++) {
           if (i>0) client.print(",");
           client.print("{\"uid\":\""); client.print(historial[i].uid);
-          client.print("\",\"nombre\":\""); client.print(escapeJSON(historial[i].nombre));
+          client.print("\",\"nombre\":\""); printEscapedJSON(client, historial[i].nombre);
           client.print("\",\"ts\":"); client.print(historial[i].timestamp);
           client.print("}");
         }
@@ -1002,13 +1123,14 @@ void handleWebAdmin() {
           if (i > 0) client.print(",");
           client.print("{\"idx\":"); client.print(i);
           client.print(",\"uid\":\""); client.print(baseDatos[i].uid);
-          client.print("\",\"nombre\":\""); client.print(escapeJSON(baseDatos[i].nombre));
+          client.print("\",\"nombre\":\""); printEscapedJSON(client, baseDatos[i].nombre);
           client.print("\",\"pat\":"); client.print(baseDatos[i].patronID);
           client.print(",\"accesos\":"); client.print(baseDatos[i].accesos);
           client.print(",\"sh\":"); client.print(baseDatos[i].startHour);
           client.print(",\"sm\":"); client.print(baseDatos[i].startMin);
           client.print(",\"eh\":"); client.print(baseDatos[i].endHour);
           client.print(",\"em\":"); client.print(baseDatos[i].endMin);
+          client.print(",\"days\":"); client.print(baseDatos[i].days);
           client.print("}");
         }
         client.print("]");
@@ -1059,11 +1181,30 @@ void handleWebAdmin() {
           String classParam = getParamDecoded(body, "class");
           classParam.toCharArray(systemConfig.classRoom, 32);
         }
+        if (hasParam(body, "classNum")) {
+          String classNumParam = getParamDecoded(body, "classNum");
+          classNumParam.toCharArray(systemConfig.classNum, 8);
+        }
+        if (hasParam(body, "lat")) {
+          systemConfig.latitude = getParam(body, "lat").toDouble();
+        }
+        if (hasParam(body, "lon")) {
+          systemConfig.longitude = getParam(body, "lon").toDouble();
+        }
 
         eepromSaveConfig();
         addLog("ADMIN", "Configuracion de sistema actualizada. Reiniciando...");
         sp(client, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\r\n{\"ok\":true}");
         
+        client.stop();
+        delay(1000);
+        NVIC_SystemReset();
+        return;
+      }
+      else if (reqLine.indexOf("POST /api/eepromreset") != -1) {
+        eepromResetAll();
+        addLog("ADMIN", "EEPROM reseteada por peticion web. Reiniciando...", LOG_WARN);
+        sp(client, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\r\n{\"ok\":true}");
         client.stop();
         delay(1000);
         NVIC_SystemReset();
@@ -1111,7 +1252,19 @@ void handleDiscovery() {
     if (len > 0) packetBuffer[len] = 0;
     if (String(packetBuffer) == "SONA_DISCOVER") {
       udp.beginPacket(udp.remoteIP(), udp.remotePort());
-      udp.print("{\"name\":\"" + String(systemConfig.hostname) + "\",\"ip\":\"" + WiFi.localIP().toString() + "\",\"class\":\"" + escapeJSON(systemConfig.classRoom) + "\",\"ver\":\"" VERSION "\"}");
+      // Incluir heap y rssi en la respuesta UDP para evitar falsas alertas en la app movil
+      udp.print("{\"name\":\"" + String(systemConfig.hostname) + 
+                "\",\"ip\":\"" + WiFi.localIP().toString() + 
+                "\",\"class\":\"" + escapeJSON(systemConfig.classRoom) + 
+                "\",\"classNum\":\"" + escapeJSON(systemConfig.classNum) + 
+                "\",\"ver\":\"" VERSION "\",\"heap\":" + String(getFreeHeap()) + 
+                ",\"rssi\":" + String(WiFi.RSSI()) + 
+                ",\"lat\":" + String(systemConfig.latitude, 8) + 
+                ",\"lon\":" + String(systemConfig.longitude, 8) + 
+                ",\"lastUID\":\"" + ultimoTagUID + 
+                "\",\"lastNombre\":\"" + escapeJSON(ultimoTagNombre) + 
+                "\",\"lastTs\":" + String(ultimoTagTs) + 
+                ",\"lastPermitido\":" + String(ultimoTagPermitido ? "true" : "false") + "}");
       udp.endPacket();
     }
   }
