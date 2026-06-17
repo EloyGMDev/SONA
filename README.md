@@ -4,7 +4,6 @@
 
 **Firmware de navegación asistida y control de accesos para entornos educativos.** Desarrollado para plataformas embebidas híbridas (Renesas RA4M1 / ESP32-S3), con arquitectura síncrona no bloqueante, persistencia segura y servicios de red distribuidos.
 
-[![License](https://img.shields.io/badge/license-MIT-238636?style=flat-square)](LICENSE)
 [![Version](https://img.shields.io/badge/version-2.0-6e40c9?style=flat-square)](#)
 
 
